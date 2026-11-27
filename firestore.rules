@@ -1,0 +1,221 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Global default-deny safety net
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // Reusable hardened primitives
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() > 0 && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isVerifiedUser() {
+      return isSignedIn() && request.auth.token.email_verified == true;
+    }
+
+    function isAdmin() {
+      return isVerifiedUser() && (
+        request.auth.token.email == 'sqari829@gmail.com' ||
+        exists(/databases/$(database)/documents/admins/$(request.auth.uid))
+      );
+    }
+
+    function isValidSiteConfig(data) {
+      return data.keys().hasAll(['settings', 'updatedAt', 'updatedBy']) &&
+        data.keys().hasOnly([
+          'settings',
+          'brokers',
+          'articles',
+          'quizQuestions',
+          'customPages',
+          'customNavButtons',
+          'mediaLibrary',
+          'siteLogoUrl',
+          'brandTagline',
+          'updatedAt',
+          'updatedBy'
+        ]) &&
+        data.settings is map &&
+        data.updatedAt is timestamp &&
+        data.updatedAt == request.time &&
+        data.updatedBy is string &&
+        data.updatedBy.size() > 0 &&
+        data.updatedBy.size() <= 128 &&
+        data.updatedBy == request.auth.uid &&
+        (!('brokers' in data) || (data.brokers is list && data.brokers.size() <= 100)) &&
+        (!('articles' in data) || (data.articles is list && data.articles.size() <= 100)) &&
+        (!('quizQuestions' in data) || (data.quizQuestions is list && data.quizQuestions.size() <= 100)) &&
+        (!('customPages' in data) || (data.customPages is list && data.customPages.size() <= 50)) &&
+        (!('customNavButtons' in data) || (data.customNavButtons is list && data.customNavButtons.size() <= 30)) &&
+        (!('mediaLibrary' in data) || (data.mediaLibrary is list && data.mediaLibrary.size() <= 100)) &&
+        (!('siteLogoUrl' in data) || (data.siteLogoUrl is string && data.siteLogoUrl.size() <= 200000)) &&
+        (!('brandTagline' in data) || (data.brandTagline is string && data.brandTagline.size() <= 200));
+    }
+
+    function isValidPresence(data) {
+      return data.keys().hasAll([
+          'sessionId',
+          'device',
+          'country',
+          'countryCode',
+          'flag',
+          'currentPage',
+          'active',
+          'lastSeen'
+        ]) &&
+        data.keys().hasOnly([
+          'sessionId',
+          'device',
+          'country',
+          'countryCode',
+          'flag',
+          'currentPage',
+          'active',
+          'lastSeen'
+        ]) &&
+        isValidId(data.sessionId) &&
+        data.device is string && data.device in ['Mobile', 'Tablet', 'PC'] &&
+        data.country is string && data.country.size() > 0 && data.country.size() <= 64 &&
+        data.countryCode is string && data.countryCode.size() > 0 && data.countryCode.size() <= 8 &&
+        data.flag is string && data.flag.size() > 0 && data.flag.size() <= 16 &&
+        data.currentPage is string && data.currentPage.size() > 0 && data.currentPage.size() <= 64 &&
+        data.active is bool &&
+        data.lastSeen is timestamp &&
+        data.lastSeen == request.time;
+    }
+
+    function isValidAnalyticsEvent(data) {
+      return data.keys().hasAll([
+          'eventId',
+          'type',
+          'page',
+          'label',
+          'country',
+          'countryCode',
+          'flag',
+          'device',
+          'durationSec',
+          'createdAt'
+        ]) &&
+        data.keys().hasOnly([
+          'eventId',
+          'type',
+          'page',
+          'label',
+          'country',
+          'countryCode',
+          'flag',
+          'device',
+          'durationSec',
+          'createdAt'
+        ]) &&
+        isValidId(data.eventId) &&
+        data.type is string && data.type in [
+          'page_view',
+          'referral_click',
+          'telegram_click',
+          'calculator_used',
+          'session_start',
+          'cookie_consent'
+        ] &&
+        data.page is string && data.page.size() > 0 && data.page.size() <= 64 &&
+        data.label is string && data.label.size() > 0 && data.label.size() <= 160 &&
+        data.country is string && data.country.size() > 0 && data.country.size() <= 64 &&
+        data.countryCode is string && data.countryCode.size() > 0 && data.countryCode.size() <= 8 &&
+        data.flag is string && data.flag.size() > 0 && data.flag.size() <= 16 &&
+        data.device is string && data.device in ['Mobile', 'Tablet', 'PC'] &&
+        (data.durationSec is int || data.durationSec is float) &&
+        data.durationSec >= 0 && data.durationSec <= 86400 &&
+        data.createdAt is timestamp &&
+        data.createdAt == request.time;
+    }
+
+    // Boot connection check
+    match /test/{docId} {
+      allow get: if docId == 'connection';
+      allow list, create, update, delete: if false;
+    }
+
+    // Admin records (self-read only)
+    match /admins/{uid} {
+      allow get: if isSignedIn() && isValidId(uid) && request.auth.uid == uid;
+      allow list, create, update, delete: if false;
+    }
+
+    // Global real-time CMS configuration (public read on single doc, admin-only write)
+    match /site_config/{configId} {
+      allow get: if isValidId(configId) && configId == 'global';
+      allow list: if false;
+      allow create: if isAdmin() &&
+        isValidId(configId) &&
+        configId == 'global' &&
+        isValidSiteConfig(incoming());
+      allow update: if isAdmin() &&
+        isValidId(configId) &&
+        configId == 'global' &&
+        isValidSiteConfig(incoming()) &&
+        incoming().diff(existing()).affectedKeys().hasOnly([
+          'settings',
+          'brokers',
+          'articles',
+          'quizQuestions',
+          'customPages',
+          'customNavButtons',
+          'mediaLibrary',
+          'siteLogoUrl',
+          'brandTagline',
+          'updatedAt',
+          'updatedBy'
+        ]);
+      allow delete: if false;
+    }
+
+    // Live visitor presence (zero PII)
+    match /analytics_presence/{sessionId} {
+      allow get: if isValidId(sessionId);
+      allow list: if isAdmin() || resource.data.active == true;
+      allow create: if isValidId(sessionId) &&
+        isValidPresence(incoming()) &&
+        incoming().sessionId == sessionId;
+      allow update: if isValidId(sessionId) &&
+        isValidPresence(incoming()) &&
+        incoming().sessionId == existing().sessionId &&
+        incoming().diff(existing()).affectedKeys().hasOnly([
+          'currentPage',
+          'active',
+          'lastSeen',
+          'device',
+          'country',
+          'countryCode',
+          'flag'
+        ]);
+      allow delete: if isAdmin() && isValidId(sessionId);
+    }
+
+    // Real-time traffic & action events (zero PII)
+    match /analytics_events/{eventId} {
+      allow get: if isAdmin() && isValidId(eventId);
+      allow list: if isAdmin();
+      allow create: if isValidId(eventId) &&
+        isValidAnalyticsEvent(incoming()) &&
+        incoming().eventId == eventId;
+      allow update: if false;
+      allow delete: if isAdmin() && isValidId(eventId);
+    }
+  }
+}

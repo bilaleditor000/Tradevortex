@@ -1,0 +1,85 @@
+{
+  "entities": {
+    "SiteConfig": {
+      "title": "SiteConfig",
+      "description": "Global TradeVortex CMS configuration, broker links, articles, quiz questions, custom pages, navigation buttons, and media library.",
+      "type": "object",
+      "properties": {
+        "settings": { "type": "object", "description": "AdminSettings configuration map" },
+        "brokers": { "type": "array", "description": "Published broker listings" },
+        "articles": { "type": "array", "description": "Published academy articles" },
+        "quizQuestions": { "type": "array", "description": "Published certification quiz questions" },
+        "customPages": { "type": "array", "description": "Custom standalone pages created via Site Builder" },
+        "customNavButtons": { "type": "array", "description": "Custom navigation buttons created via Site Builder" },
+        "mediaLibrary": { "type": "array", "description": "Media library items (images, videos, audio)" },
+        "siteLogoUrl": { "type": "string", "maxLength": 200000, "description": "Custom site logo image URL or safe data URI" },
+        "brandTagline": { "type": "string", "maxLength": 200, "description": "Custom site brand tagline" },
+        "updatedAt": { "type": "string", "format": "date-time", "description": "Server timestamp of last global publish" },
+        "updatedBy": { "type": "string", "maxLength": 128, "description": "UID of admin who published the update" }
+      },
+      "required": ["settings", "updatedAt", "updatedBy"]
+    },
+    "AnalyticsPresence": {
+      "title": "AnalyticsPresence",
+      "description": "Anonymous active visitor session heartbeat for real-time online visitor counts.",
+      "type": "object",
+      "properties": {
+        "sessionId": { "type": "string", "maxLength": 128, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "device": { "type": "string", "enum": ["Mobile", "Tablet", "PC"], "maxLength": 16 },
+        "country": { "type": "string", "maxLength": 64 },
+        "countryCode": { "type": "string", "maxLength": 8 },
+        "flag": { "type": "string", "maxLength": 16 },
+        "currentPage": { "type": "string", "maxLength": 64 },
+        "active": { "type": "boolean" },
+        "lastSeen": { "type": "string", "format": "date-time" }
+      },
+      "required": ["sessionId", "device", "country", "countryCode", "flag", "currentPage", "active", "lastSeen"]
+    },
+    "AnalyticsEvent": {
+      "title": "AnalyticsEvent",
+      "description": "Anonymous traffic, page view, referral click, and engagement telemetry event.",
+      "type": "object",
+      "properties": {
+        "eventId": { "type": "string", "maxLength": 128, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "type": { "type": "string", "enum": ["page_view", "referral_click", "telegram_click", "calculator_used", "session_start", "cookie_consent"], "maxLength": 32 },
+        "page": { "type": "string", "maxLength": 64 },
+        "label": { "type": "string", "maxLength": 160 },
+        "country": { "type": "string", "maxLength": 64 },
+        "countryCode": { "type": "string", "maxLength": 8 },
+        "flag": { "type": "string", "maxLength": 16 },
+        "device": { "type": "string", "enum": ["Mobile", "Tablet", "PC"], "maxLength": 16 },
+        "durationSec": { "type": "number" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["eventId", "type", "page", "label", "country", "countryCode", "flag", "device", "durationSec", "createdAt"]
+    },
+    "AdminUser": {
+      "title": "AdminUser",
+      "description": "Verified administrator access marker.",
+      "type": "object",
+      "properties": {
+        "email": { "type": "string", "maxLength": 160 },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["email", "createdAt"]
+    }
+  },
+  "firestore": {
+    "/site_config/{configId}": {
+      "schema": { "$ref": "#/entities/SiteConfig" },
+      "description": "Global TradeVortex CMS state synced in real time to all devices."
+    },
+    "/analytics_presence/{sessionId}": {
+      "schema": { "$ref": "#/entities/AnalyticsPresence" },
+      "description": "Active visitor session presence records."
+    },
+    "/analytics_events/{eventId}": {
+      "schema": { "$ref": "#/entities/AnalyticsEvent" },
+      "description": "Traffic and interaction telemetry events."
+    },
+    "/admins/{uid}": {
+      "schema": { "$ref": "#/entities/AdminUser" },
+      "description": "Administrator privilege records."
+    }
+  }
+}

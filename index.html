@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="en" class="dark">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>TradeVortex – Institutional Trading Calculators &amp; Brokers</title>
+    <meta name="description" content="Institutional forex, gold, and crypto position size calculators, live market sessions clock, TradingView charts, economic calendar, and Tier-1 ECN broker comparisons." />
+    <meta name="keywords" content="forex lot size calculator, pip value calculator, gold position size, ECN broker comparison, trading sessions clock, currency strength meter, TradingView chart, trading academy" />
+    <meta name="author" content="TradeVortex" />
+    <link rel="canonical" href="https://tradevortex.com/" />
+
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://tradevortex.com/" />
+    <meta property="og:title" content="TradeVortex – Institutional Trading Calculators &amp; Brokers" />
+    <meta property="og:description" content="Institutional forex, gold, and crypto position size calculators, live market sessions clock, TradingView charts, economic calendar, and Tier-1 ECN broker comparisons." />
+    <meta property="og:site_name" content="TradeVortex" />
+
+    <!-- Twitter -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="TradeVortex – Institutional Trading Calculators &amp; Brokers" />
+    <meta name="twitter:description" content="Institutional forex, gold, and crypto position size calculators, live market sessions clock, TradingView charts, economic calendar, and Tier-1 ECN broker comparisons." />
+
+    <!-- Google Fonts: Plus Jakarta Sans & JetBrains Mono -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+
+    <!-- Filter out benign third-party cross-origin script errors -->
+    <script>
+      window.addEventListener('error', function(e) {
+        if (!e.filename || e.filename === '' || e.message === 'Script error.' || (typeof e.message === 'string' && e.message.includes('Script error'))) {
+          e.stopImmediatePropagation();
+          return true;
+        }
+      }, true);
+      window.addEventListener('unhandledrejection', function(e) {
+        if (e.reason && (e.reason.message === 'Script error.' || (typeof e.reason === 'string' && e.reason.includes('Script error')))) {
+          e.stopImmediatePropagation();
+        }
+      });
+    </script>
+
+    <!-- Schema.org WebApplication structured data -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "WebApplication",
+      "name": "TradeVortex",
+      "url": "https://tradevortex.com",
+      "applicationCategory": "FinanceApplication",
+      "operatingSystem": "All",
+      "description": "Institutional forex, gold, and crypto risk management calculators, live market sessions clock, currency strength meter, TradingView live charts, and Tier-1 ECN broker research.",
+      "offers": {
+        "@type": "Offer",
+        "price": "0",
+        "priceCurrency": "USD"
+      },
+      "featureList": [
+        "Forex Lot Size Calculator",
+        "Pip Value Calculator",
+        "Gold & Indices Position Sizer",
+        "Risk to Reward & Margin Calculator",
+        "Compound Interest & Drawdown Calculator",
+        "Live Global Market Sessions Clock",
+        "High-Impact Economic Calendar",
+        "Currency & Asset Strength Meter",
+        "Tier-1 Regulated ECN Broker Matrix",
+        "Trading Academy & Certification Quiz"
+      ]
+    }
+    </script>
+  </head>
+  <body class="bg-[#080d1a] text-slate-100 antialiased selection:bg-cyan-500/30 selection:text-cyan-200 min-h-screen">
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

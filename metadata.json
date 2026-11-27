@@ -1,0 +1,6 @@
+{
+  "name": "TradeVortex – Institutional Trading Calculators & Brokers",
+  "description": "Institutional forex, gold, and crypto position size calculators, live market sessions clock, TradingView charts, economic calendar, and Tier-1 ECN broker comparisons.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
